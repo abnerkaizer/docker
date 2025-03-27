@@ -1,0 +1,32 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      ADMIN_TOKEN: "${TOKEN}"
+    volumes:
+      - vw-data:/data
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+      - traefik.enable=true
+      - traefik.http.routers.vaultwarden-http.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.vaultwarden-http.entrypoints=http
+      - traefik.http.routers.vaultwarden-http.middlewares=https-redirect
+      - traefik.http.routers.vaultwarden-https.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.vaultwarden-https.entrypoints=https
+      - traefik.http.routers.vaultwarden-https.tls=true
+      - traefik.http.routers.vaultwarden-https.tls.certresolver=le
+      - traefik.http.routers.vaultwarden-https.service=vaultwarden-service
+      - traefik.http.services.vaultwarden-service.loadbalancer.server.port=80
+    networks:
+      - traefik-public
+
+volumes:
+  vw-data:
+
+networks:
+  traefik-public:
+    external: true
